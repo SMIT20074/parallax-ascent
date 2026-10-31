@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ascent | A parallax scroll from valley to orbit</title>
+<meta name="description" content="Scroll from a sunrise valley to Earth orbit. Every layer moves at its own speed.">
+<meta name="theme-color" content="#ffd9a8">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23ff9d7c%27/%3E%3Cpath d=%27M3 26l9-14 5 8 4-6 8 12z%27 fill=%27%232a1535%27/%3E%3C/svg%3E">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,800&family=DM+Sans:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--fg:#2a1830;--acc:#ff6b4a}
+*{box-sizing:border-box;margin:0}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',system-ui,sans-serif;line-height:1.6;background:#04040f;overflow-x:hidden;color:var(--fg)}
+:focus-visible{outline:3px solid #fff;outline-offset:3px;box-shadow:0 0 0 6px #2a1830}
+.skip{position:absolute;left:-999px;top:8px;z-index:50;background:#fff;color:#000;padding:10px 16px}.skip:focus{left:8px}
+
+.scene{position:relative;min-height:115vh;overflow:hidden;display:flex;align-items:center;padding:110px 7vw}
+#dawn{background:linear-gradient(#ffe3b3,#ff9d7c)}
+#peaks{background:linear-gradient(#ff9d7c,#8a6fb8)}
+#clouds{background:linear-gradient(#8a6fb8,#4a8bea)}
+#sky{background:linear-gradient(#4a8bea,#0d2457)}
+#orbit{background:linear-gradient(#0d2457,#04040f 55%)}
+.layers{position:absolute;inset:0;pointer-events:none}
+.lyr{position:absolute;left:-3%;right:-3%;will-change:transform}
+.lyr svg{display:block;width:100%;height:100%}
+
+.panel{position:relative;z-index:5;max-width:520px;padding:30px 32px;border-radius:24px;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);will-change:transform}
+.light{background:rgba(255,246,236,.66);color:#2a1830;box-shadow:0 20px 60px rgba(120,50,40,.2)}
+.dark{background:rgba(8,10,30,.72);color:#f4f1ff;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+.right{margin-left:auto}
+.kick{font-size:.8rem;letter-spacing:.22em;text-transform:uppercase;font-weight:600;opacity:.85}
+h1,h2{font-family:'Bricolage Grotesque',system-ui,sans-serif;font-weight:800;line-height:.98;letter-spacing:-.03em;margin:10px 0 16px}
+h1{font-size:clamp(3.4rem,10.5vw,6.6rem)}
+h2{font-size:clamp(2.2rem,5.4vw,4.2rem)}
+.panel p+p{margin-top:12px}
+.fact{display:inline-block;margin-top:16px;padding:6px 14px;border-radius:999px;border:1.5px solid currentColor;font-weight:600;font-size:.88rem}
+.btn{display:inline-flex;align-items:center;min-height:48px;margin-top:22px;padding:12px 26px;border-radius:999px;border:0;background:#fff;color:#0d2457;font:inherit;font-weight:600;cursor:pointer;text-decoration:none;transition:transform .2s}
+.btn:hover{transform:translateY(-3px)}
+
+.hud{position:fixed;left:max(18px,3vw);bottom:max(18px,env(safe-area-inset-bottom));z-index:20;padding:10px 18px;border-radius:16px;background:rgba(10,10,30,.62);backdrop-filter:blur(8px);color:#fff;font-variant-numeric:tabular-nums}
+.hud small{display:block;font-size:.65rem;letter-spacing:.2em;opacity:.8}
+.hud b{font-family:'Bricolage Grotesque',sans-serif;font-size:1.5rem}
+.brand{position:fixed;top:max(16px,env(safe-area-inset-top));left:max(18px,3vw);z-index:20;padding:8px 16px;border-radius:999px;background:rgba(10,10,30,.62);backdrop-filter:blur(8px);color:#fff;font-family:'Bricolage Grotesque',sans-serif;font-weight:800;letter-spacing:.14em;text-decoration:none}
+.rail{position:fixed;right:max(10px,1.6vw);top:50%;transform:translateY(-50%);z-index:20;display:grid}
+.rail a{width:44px;height:36px;display:grid;place-items:center}
+.rail i{width:12px;height:12px;border-radius:50%;background:rgba(255,255,255,.35);border:2px solid #fff;transition:transform .3s,background .3s}
+.rail a[aria-current] i{background:#fff;transform:scale(1.5)}
+.rv{opacity:0;transform:translateY(34px);transition:opacity .9s,transform .9s}
+.rv.in{opacity:1;transform:none}
+footer{padding:22px 7vw;background:#04040f;color:#b9bdd9;font-size:.85rem}
+@media(max-width:700px){.lyr[style*='--sat']{top:6%!important;left:30%!important}.scene{padding:100px 5vw}.panel{padding:22px}.right{margin-left:0}.rail{display:none}.hud b{font-size:1.2rem}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important}.rv{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<a class="brand" href="#dawn">ASCENT</a>
+<div class="hud" aria-hidden="true"><small>ALTITUDE</small><b id="alt">0 m</b></div>
+<nav class="rail" aria-label="Chapters"><a href="#dawn" aria-label="Valley"><i></i></a><a href="#peaks" aria-label="Peaks"><i></i></a><a href="#clouds" aria-label="Clouds"><i></i></a><a href="#sky" aria-label="Stratosphere"><i></i></a><a href="#orbit" aria-label="Orbit"><i></i></a></nav>
+
+<main id="main">
+<section class="scene" id="dawn" data-tone="light"><div class="layers" aria-hidden="true"></div>
+  <div class="panel light rv" data-s="0.1"><p class="kick">01 &middot; Valley</p><h1>Ascent</h1><p>It starts at sunrise, at the bottom of a quiet valley. Scroll, and everything around you begins to move at a different speed.</p><span class="fact">Altitude: 0 m</span></div></section>
+
+<section class="scene" id="peaks" data-tone="dark"><div class="layers" aria-hidden="true"></div>
+  <div class="panel dark right rv" data-s="0.1"><p class="kick">02 &middot; Peaks</p><h2>Above the treeline</h2><p>The far ridges barely drift while the near ones race past. That difference is what your eyes read as depth.</p><span class="fact">Mount Everest: about 8,850 m</span></div></section>
+
+<section class="scene" id="clouds" data-tone="dark"><div class="layers" aria-hidden="true"></div>
+  <div class="panel dark rv" data-s="0.1"><p class="kick">03 &middot; Clouds</p><h2>Through the cloud deck</h2><p>Three layers of cloud pass at three speeds, and the wisps closest to you rush by the fastest.</p><span class="fact">Most clouds sit below 6 km</span></div></section>
+
+<section class="scene" id="sky" data-tone="dark"><div class="layers" aria-hidden="true"></div>
+  <div class="panel dark right rv" data-s="0.1"><p class="kick">04 &middot; Stratosphere</p><h2>The air gets thin</h2><p>The sky darkens, the first stars appear, and a lone weather balloon floats up beside you.</p><span class="fact">Jets cruise at about 11 km</span></div></section>
+
+<section class="scene" id="orbit" data-tone="dark"><div class="layers" aria-hidden="true"></div>
+  <div class="panel dark rv" data-s="0.1"><p class="kick">05 &middot; Orbit</p><h2>You made it.</h2><p>Stars, a moon, a satellite and the curve of the Earth, all in layers that move apart as you scroll.</p><span class="fact">The ISS orbits at about 400 km</span><br><a class="btn" href="#dawn">Back to the valley</a></div></section>
+</main>
+<footer>Unofficial student project for the Techfest CA Program. Pure HTML, CSS and JavaScript, no libraries.</footer>
+
+<script>
+const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
+const reduce=matchMedia('(prefers-reduced-motion:reduce)').matches;
+const rng=s=>()=>(s=s*16807%2147483647)/2147483647;
+const svg=(vb,body,extra='')=>`<svg viewBox="${vb}" preserveAspectRatio="none" ${extra}>${body}</svg>`;
+function ridge(seed,base,amp,col,n=16){const r=rng(seed);let d=`M0 500L0 ${base}`;for(let i=1;i<=n;i++)d+=`L${1440*i/n} ${base-amp*(.2+.8*r())}`;return svg('0 0 1440 500',`<path d="${d}L1440 500Z" fill="${col}"/>`)}
+function pines(col){const r=rng(7);let b='';for(let x=0;x<1440;x+=34+r()*30){const h=130+r()*150,w=44+r()*24;b+=`<path d="M${x} 400l${w/2} -${h}l${w/2} ${h}z" fill="${col}"/>`}return svg('0 0 1440 400',b+`<rect y="395" width="1440" height="20" fill="${col}"/>`)}
+function clouds(seed,n,sc,op){const r=rng(seed);let b='';for(let i=0;i<n;i++){const x=r()*1440,y=60+r()*680,s=sc*(.7+r()*.8);b+=`<g transform="translate(${x} ${y}) scale(${s})" fill="#fff" opacity="${op}"><ellipse rx="70" ry="24"/><circle cx="-28" cy="-14" r="26"/><circle cx="14" cy="-26" r="34"/><circle cx="52" cy="-8" r="22"/></g>`}return svg('0 0 1440 800',b)}
+function stars(seed,n,rmin,rmax,op){const r=rng(seed);let b='';for(let i=0;i<n;i++)b+=`<circle cx="${r()*1440}" cy="${r()*900}" r="${rmin+r()*(rmax-rmin)}" fill="#fff" opacity="${op*(.5+r()*.5)}"/>`;return svg('0 0 1440 900',b)}
+const birds=svg('0 0 400 160',[[40,40],[120,90],[210,30],[300,100],[350,50]].map(([x,y])=>`<path d="M${x} ${y}q10 -12 20 0q10 -12 20 0" fill="none" stroke="#5a2d4a" stroke-width="3" stroke-linecap="round"/>`).join(''));
+const sat=svg('0 0 300 140','<g fill="none" stroke="#cfe3ff" stroke-width="2"><rect x="10" y="40" width="100" height="60" fill="#2f5db8"/><rect x="190" y="40" width="100" height="60" fill="#2f5db8"/><path d="M40 40v60M70 40v60M220 40v60M250 40v60M10 70h100M190 70h100"/><rect x="120" y="50" width="60" height="40" rx="6" fill="#e6ecf7" stroke="#8aa0c8"/><path d="M150 50v-26M138 24h24"/></g>','preserveAspectRatio="xMidYMid meet"');
+const balloon=svg('0 0 120 300','<ellipse cx="60" cy="70" rx="48" ry="62" fill="#ffd166"/><path d="M60 8c-20 30-20 100 0 124c20 -24 20 -94 0 -124" fill="#ff6b4a" opacity=".55"/><path d="M60 132v90" stroke="#fff" stroke-width="2"/><rect x="48" y="222" width="24" height="18" rx="3" fill="#e9eefc"/>','preserveAspectRatio="xMidYMid meet"');
+
+// scene -> [speed, x-speed, css, html]
+const L={
+ dawn:[
+  [.55,0,'left:60%;right:auto;top:16%;width:230px;height:230px','<div style="width:100%;height:100%;border-radius:50%;background:radial-gradient(circle,#fff6d6 0 38%,#ffd27a 62%,rgba(255,200,120,0) 72%);box-shadow:0 0 120px 60px rgba(255,200,120,.55)"></div>'],
+  [.34,0,'bottom:18%;height:38%',ridge(11,330,260,'#f3b08e')],
+  [.2,0,'bottom:8%;height:40%',ridge(23,340,230,'#dd8a82')],
+  [.08,0,'bottom:-2%;height:42%',ridge(37,350,210,'#b8627c')],
+  [.16,-.05,'top:14%;height:20%;left:6%;right:auto;width:42%',birds],
+  [-.22,0,'bottom:-3%;height:32%',pines('#2a1535')]],
+ peaks:[
+  [.34,0,'bottom:26%;height:44%',ridge(51,350,300,'#b88cc0')],
+  [.2,0,'bottom:12%;height:46%',ridge(63,350,320,'#8a639f')],
+  [.05,0,'bottom:-2%;height:48%',ridge(77,360,300,'#5a4585')],
+  [-.12,.04,'bottom:6%;height:30%','<div style="width:100%;height:100%;background:radial-gradient(ellipse at 30% 60%,rgba(255,255,255,.5),transparent 60%),radial-gradient(ellipse at 75% 40%,rgba(255,255,255,.4),transparent 55%)"></div>'],
+  [-.3,0,'bottom:-8%;height:24%',ridge(91,300,200,'#2d2352')]],
+ clouds:[
+  [.3,.06,'top:0;height:100%',clouds(3,7,.9,.35)],
+  [.12,-.05,'top:10%;height:100%',clouds(5,6,1.5,.6)],
+  [-.14,.08,'top:20%;height:100%',clouds(9,4,2.6,.9)],
+  [-.36,-.1,'top:30%;height:100%',clouds(13,3,3.6,.95)]],
+ sky:[
+  [.4,0,'top:0;height:70%',stars(21,70,.8,1.6,.55)],
+  [.22,.04,'top:12%;height:60%',clouds(17,4,1.1,.18)],
+  [-.2,.03,'top:14%;left:8%;right:auto;width:170px;height:420px',balloon],
+  [.08,0,'bottom:-24%;height:46%','<div style="width:100%;height:100%;border-radius:50%/100% 100% 0 0;background:radial-gradient(ellipse at 50% 0,rgba(120,190,255,.55),transparent 65%)"></div>']],
+ orbit:[
+  [.45,0,'top:0;height:100%',stars(31,110,.7,1.3,.8)],
+  [.24,0,'top:0;height:100%',stars(41,60,1.2,2.2,.9)],
+  [.3,0,'top:10%;right:12%;left:auto;width:120px;height:120px','<div style="width:100%;height:100%;border-radius:50%;background:radial-gradient(circle at 35% 30%,#f2f2ee,#b9b9b4 55%,#6f6f78);box-shadow:0 0 50px rgba(220,220,255,.25)"></div>'],
+  [.06,0,'left:50%;top:70%;width:230vw;height:230vw;margin-left:-115vw;right:auto','<div style="width:100%;height:100%;border-radius:50%;background:radial-gradient(circle at 50% 6%,#7fd4ff 0,#2b74e0 14%,#12408f 34%,#071a4a 62%,#030816);box-shadow:0 0 90px 10px rgba(110,190,255,.55)"></div>'],
+  [-.28,.07,'top:26%;left:58%;right:auto;width:260px;height:120px;--sat:1',sat]]
+};
+$$('.scene').forEach(sc=>{const host=$('.layers',sc);(L[sc.id]||[]).forEach(([s,xs,css,html])=>{const d=document.createElement('div');d.className='lyr';d.style.cssText=css;d.dataset.s=s;d.dataset.x=xs;d.innerHTML=html;host.appendChild(d)})});
+
+// motion
+const scenes=$$('.scene'),alt=$('#alt'),railA=$$('.rail a');
+let vh=innerHeight,cache=[],docMax=1,sy=scrollY,mx=0,cur=-1;
+function measure(){vh=innerHeight;docMax=Math.max(1,document.documentElement.scrollHeight-vh);
+  cache=scenes.map(sc=>({sc,mid:sc.offsetTop+sc.offsetHeight/2,h:sc.offsetHeight,items:$$('[data-s]',sc)}))}
+addEventListener('resize',measure);addEventListener('load',measure);measure();
+addEventListener('pointermove',e=>{mx=e.clientX/innerWidth-.5});
+const fmt=a=>a<1000?Math.round(a)+' m':a<10000?(a/1000).toFixed(1)+' km':Math.round(a/1000).toLocaleString()+' km';
+function frame(t){
+  sy+=(scrollY-sy)*(reduce?1:.14);
+  if(!reduce){cache.forEach(c=>{const rel=c.mid-(sy+vh/2);if(Math.abs(rel)>c.h/2+vh)return;
+    c.items.forEach(el=>{const s=+el.dataset.s,x=+(el.dataset.x||0);
+      const tx=(rel*x+mx*s*-60).toFixed(1),ty=(-rel*s).toFixed(1),rot=el.dataset.x&&el.firstChild&&el.style.cssText.includes('--sat')?Math.sin(t/2500)*6:0;
+      el.style.transform=`translate3d(${tx}px,${ty}px,0) rotate(${rot}deg)`})})}
+  const p=Math.min(1,Math.max(0,sy/docMax));alt.textContent=fmt(408000*Math.pow(p,2.4));
+  const k=cache.reduce((b,c,i)=>Math.abs(c.mid-(sy+vh/2))<Math.abs(cache[b].mid-(sy+vh/2))?i:b,0);
+  if(k!==cur){cur=k;railA.forEach((a,i)=>i===k?a.setAttribute('aria-current','true'):a.removeAttribute('aria-current'))}
+  requestAnimationFrame(frame)}
+requestAnimationFrame(frame);
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('in')}),{threshold:.25});
+$$('.rv').forEach(el=>io.observe(el));
+</script>
+</body>
+</html>
